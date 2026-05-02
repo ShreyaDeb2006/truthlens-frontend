@@ -3,13 +3,22 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: TruthLens AI Content Detection Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: scans
+    description: AI content detection scans
+  - name: documents
+    description: Document scan operations
+  - name: stats
+    description: User statistics and dashboard data
+
 paths:
   /healthz:
     get:
@@ -24,7 +33,458 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login and get JWT tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout and invalidate token
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # SCANS
+  /scan/text:
+    post:
+      operationId: scanText
+      tags: [scans]
+      summary: Submit text for AI detection
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanTextBody"
+      responses:
+        "202":
+          description: Scan job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanJobCreated"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /scan/news:
+    post:
+      operationId: scanNews
+      tags: [scans]
+      summary: Submit URL or text for fake news detection
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanNewsBody"
+      responses:
+        "202":
+          description: Scan job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanJobCreated"
+
+  /scan/image:
+    post:
+      operationId: scanImage
+      tags: [scans]
+      summary: Upload image for AI detection
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/FileUploadBody"
+      responses:
+        "202":
+          description: Scan job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanJobCreated"
+        "400":
+          description: Invalid file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /scan/video:
+    post:
+      operationId: scanVideo
+      tags: [scans]
+      summary: Upload video for AI detection
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/FileUploadBody"
+      responses:
+        "202":
+          description: Scan job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanJobCreated"
+
+  /scan/audio:
+    post:
+      operationId: scanAudio
+      tags: [scans]
+      summary: Upload audio for AI detection
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/FileUploadBody"
+      responses:
+        "202":
+          description: Scan job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanJobCreated"
+
+  /scan/{id}:
+    get:
+      operationId: getScan
+      tags: [scans]
+      summary: Get scan status and results
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Scan result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanResult"
+        "404":
+          description: Scan not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteScan
+      tags: [scans]
+      summary: Delete a scan record
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Scan deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /scans:
+    get:
+      operationId: listScans
+      tags: [scans]
+      summary: List user's scans (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: contentType
+          in: query
+          schema:
+            type: string
+            enum: [image, video, audio, text, news, document]
+        - name: verdict
+          in: query
+          schema:
+            type: string
+            enum: [AI, HUMAN, UNCERTAIN]
+      responses:
+        "200":
+          description: Paginated scan list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanListResponse"
+
+  # DOCUMENTS
+  /document/scan:
+    post:
+      operationId: scanDocument
+      tags: [documents]
+      summary: Upload document for OCR + AI detection
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/DocumentUploadBody"
+      responses:
+        "202":
+          description: Document scan job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanJobCreated"
+        "400":
+          description: Invalid file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /document/{id}:
+    get:
+      operationId: getDocumentScan
+      tags: [documents]
+      summary: Get document scan status and results
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Document scan result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentScanResult"
+        "404":
+          description: Document scan not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteDocumentScan
+      tags: [documents]
+      summary: Delete a document scan record
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Document scan deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /documents:
+    get:
+      operationId: listDocumentScans
+      tags: [documents]
+      summary: List user's document scans (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: verdict
+          in: query
+          schema:
+            type: string
+            enum: [AI, HUMAN, UNCERTAIN]
+      responses:
+        "200":
+          description: Paginated document scan list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentScanListResponse"
+
+  # STATS / DASHBOARD
+  /stats/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [stats]
+      summary: Get dashboard statistics summary
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /stats/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [stats]
+      summary: Get recent scan activity feed
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Recent activity list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecentActivityResponse"
+
+  /stats/verdict-breakdown:
+    get:
+      operationId: getVerdictBreakdown
+      tags: [stats]
+      summary: Get verdict distribution breakdown
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Verdict breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerdictBreakdown"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +494,505 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
+
+    RegisterBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+      required:
+        - email
+        - password
+        - name
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        tier:
+          type: string
+          enum: [free, pro, enterprise]
+        createdAt:
+          type: string
+          format: date-time
+        scanCount:
+          type: integer
+      required:
+        - id
+        - email
+        - name
+        - tier
+        - createdAt
+        - scanCount
+
+    ScanTextBody:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 50
+          maxLength: 50000
+        metadata:
+          type: object
+          properties:
+            source:
+              type: string
+              enum: [web, extension]
+            sourceUrl:
+              type: string
+      required:
+        - content
+
+    ScanNewsBody:
+      type: object
+      properties:
+        url:
+          type: string
+        text:
+          type: string
+        metadata:
+          type: object
+          properties:
+            source:
+              type: string
+              enum: [web, extension]
+
+    FileUploadBody:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+      required:
+        - file
+
+    DocumentUploadBody:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+        generateSummary:
+          type: boolean
+          default: true
+        extractKeywords:
+          type: boolean
+          default: true
+      required:
+        - file
+
+    ScanJobCreated:
+      type: object
+      properties:
+        scanId:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing]
+        message:
+          type: string
+      required:
+        - scanId
+        - status
+        - message
+
+    ModelResult:
+      type: object
+      properties:
+        name:
+          type: string
+        score:
+          type: number
+        verdict:
+          type: string
+          enum: [AI, HUMAN, UNCERTAIN]
+        status:
+          type: string
+          enum: [success, error, timeout]
+        error:
+          type: string
+      required:
+        - name
+        - score
+        - verdict
+        - status
+
+    TextSegment:
+      type: object
+      properties:
+        text:
+          type: string
+        start:
+          type: integer
+        end:
+          type: integer
+        aiProbability:
+          type: number
+      required:
+        - text
+        - start
+        - end
+        - aiProbability
+
+    ScanResult:
+      type: object
+      properties:
+        scanId:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, complete, failed]
+        contentType:
+          type: string
+          enum: [image, video, audio, text, news, document]
+        fileName:
+          type: string
+        confidence:
+          type: number
+        verdict:
+          type: string
+          enum: [AI, HUMAN, UNCERTAIN]
+        verdictLabel:
+          type: string
+        models:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModelResult"
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/TextSegment"
+        warnings:
+          type: array
+          items:
+            type: string
+        failedModels:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        resultUrl:
+          type: string
+      required:
+        - scanId
+        - status
+        - contentType
+        - createdAt
+
+    ScanListItem:
+      type: object
+      properties:
+        scanId:
+          type: string
+        contentType:
+          type: string
+          enum: [image, video, audio, text, news, document]
+        fileName:
+          type: string
+        confidence:
+          type: number
+        verdict:
+          type: string
+          enum: [AI, HUMAN, UNCERTAIN]
+        verdictLabel:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, complete, failed]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - scanId
+        - contentType
+        - status
+        - createdAt
+
+    ScanListResponse:
+      type: object
+      properties:
+        scans:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScanListItem"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - scans
+        - total
+        - page
+        - limit
+        - totalPages
+
+    DocumentSection:
+      type: object
+      properties:
+        sectionIndex:
+          type: integer
+        text:
+          type: string
+        aiProbability:
+          type: number
+        highlightColor:
+          type: string
+          enum: [red, yellow, green]
+      required:
+        - sectionIndex
+        - text
+        - aiProbability
+        - highlightColor
+
+    DocumentScanResult:
+      type: object
+      properties:
+        docScanId:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, ocr_complete, complete, failed]
+        fileName:
+          type: string
+        confidence:
+          type: number
+        verdict:
+          type: string
+          enum: [AI, HUMAN, UNCERTAIN]
+        verdictLabel:
+          type: string
+        ocrText:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentSection"
+        summary:
+          type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+      required:
+        - docScanId
+        - status
+        - createdAt
+
+    DocumentScanListItem:
+      type: object
+      properties:
+        docScanId:
+          type: string
+        fileName:
+          type: string
+        confidence:
+          type: number
+        verdict:
+          type: string
+          enum: [AI, HUMAN, UNCERTAIN]
+        verdictLabel:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, ocr_complete, complete, failed]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - docScanId
+        - status
+        - createdAt
+
+    DocumentScanListResponse:
+      type: object
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentScanListItem"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - documents
+        - total
+        - page
+        - limit
+        - totalPages
+
+    DashboardStats:
+      type: object
+      properties:
+        totalScans:
+          type: integer
+        totalDocumentScans:
+          type: integer
+        aiDetectedPercent:
+          type: number
+        scansThisWeek:
+          type: integer
+        avgConfidence:
+          type: number
+        scanQuotaUsed:
+          type: integer
+        scanQuotaLimit:
+          type: integer
+      required:
+        - totalScans
+        - totalDocumentScans
+        - aiDetectedPercent
+        - scansThisWeek
+        - avgConfidence
+        - scanQuotaUsed
+        - scanQuotaLimit
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [scan, document_scan]
+        contentType:
+          type: string
+        fileName:
+          type: string
+        verdict:
+          type: string
+          enum: [AI, HUMAN, UNCERTAIN]
+        verdictLabel:
+          type: string
+        confidence:
+          type: number
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - contentType
+        - status
+        - createdAt
+
+    RecentActivityResponse:
+      type: object
+      properties:
+        activity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+      required:
+        - activity
+
+    VerdictBreakdown:
+      type: object
+      properties:
+        ai:
+          type: integer
+        human:
+          type: integer
+        uncertain:
+          type: integer
+        byContentType:
+          type: array
+          items:
+            type: object
+            properties:
+              contentType:
+                type: string
+              ai:
+                type: integer
+              human:
+                type: integer
+              uncertain:
+                type: integer
+            required:
+              - contentType
+              - ai
+              - human
+              - uncertain
+      required:
+        - ai
+        - human
+        - uncertain
+        - byContentType
