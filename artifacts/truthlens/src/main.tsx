@@ -1,7 +1,9 @@
 import { createRoot } from "react-dom/client";
-import { setAuthTokenGetter, setFirebaseConfig, getFirebaseAuth } from "@workspace/api-client-react";
+import { setBaseUrl, setAuthTokenGetter, setFirebaseConfig, getFirebaseAuth } from "@workspace/api-client-react";
 import App from "./App";
 import "./index.css";
+
+setBaseUrl(import.meta.env.VITE_API_URL || "https://zixo-ai.onrender.com");
 
 setFirebaseConfig({
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? "",
