@@ -2,11 +2,8 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Shield, Eye, EyeOff } from "lucide-react";
 import { useLogin } from "@workspace/api-client-react";
-import { useAuth } from "@/lib/auth";
-
 export default function LoginPage() {
   const [, navigate] = useLocation();
-  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,8 +17,7 @@ export default function LoginPage() {
     loginMutation.mutate(
       { data: { email, password } },
       {
-        onSuccess: (data) => {
-          login(data.token);
+        onSuccess: () => {
           navigate("/dashboard");
         },
         onError: () => setError("Invalid email or password. Please try again."),

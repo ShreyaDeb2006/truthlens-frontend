@@ -2,11 +2,8 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Shield, Eye, EyeOff } from "lucide-react";
 import { useRegister } from "@workspace/api-client-react";
-import { useAuth } from "@/lib/auth";
-
 export default function SignupPage() {
   const [, navigate] = useLocation();
-  const { login } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,11 +18,10 @@ export default function SignupPage() {
     registerMutation.mutate(
       { data: { name, email, password } },
       {
-        onSuccess: (data) => {
-          login(data.token);
+        onSuccess: () => {
           navigate("/dashboard");
         },
-        onError: (err: any) => setError(err?.response?.data?.message || "Registration failed. Please try again."),
+        onError: (err: any) => setError(err?.message || "Registration failed. Please try again."),
       }
     );
   };

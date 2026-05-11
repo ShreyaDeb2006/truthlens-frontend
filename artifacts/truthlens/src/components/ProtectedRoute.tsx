@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ path, component: Component }: ProtectedRouteProps) {
-  const { token, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   return (
     <Route path={path}>
@@ -20,7 +20,7 @@ export function ProtectedRoute({ path, component: Component }: ProtectedRoutePro
             </div>
           );
         }
-        if (!token) {
+        if (!user) {
           return <Redirect to="/login" />;
         }
         return <Component />;

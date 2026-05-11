@@ -43,6 +43,13 @@ import type {
 
 import { customFetch } from "../custom-fetch";
 import type { ErrorType, BodyType } from "../custom-fetch";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  updateProfile,
+} from "firebase/auth";
+import { getFirebaseAuth } from "../firebase";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -135,14 +142,28 @@ export const getRegisterUrl = () => {
 
 export const register = async (
   registerBody: RegisterBody,
-  options?: RequestInit,
 ): Promise<AuthResponse> => {
-  return customFetch<AuthResponse>(getRegisterUrl(), {
-    ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(registerBody),
-  });
+  const auth = getFirebaseAuth();
+  const cred = await createUserWithEmailAndPassword(
+    auth,
+    registerBody.email,
+    registerBody.password,
+  );
+  if (registerBody.name) {
+    await updateProfile(cred.user, { displayName: registerBody.name });
+  }
+  const token = await cred.user.getIdToken();
+  return {
+    token,
+    user: {
+      id: cred.user.uid,
+      email: cred.user.email ?? "",
+      name: cred.user.displayName ?? registerBody.name ?? "",
+      tier: "free",
+      scanCount: 0,
+      createdAt: new Date().toISOString(),
+    },
+  };
 };
 
 export const getRegisterMutationOptions = <
@@ -177,7 +198,7 @@ export const getRegisterMutationOptions = <
   > = (props) => {
     const { data } = props ?? {};
 
-    return register(data, requestOptions);
+    return register(data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -221,14 +242,25 @@ export const getLoginUrl = () => {
 
 export const login = async (
   loginBody: LoginBody,
-  options?: RequestInit,
 ): Promise<AuthResponse> => {
-  return customFetch<AuthResponse>(getLoginUrl(), {
-    ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(loginBody),
-  });
+  const auth = getFirebaseAuth();
+  const cred = await signInWithEmailAndPassword(
+    auth,
+    loginBody.email,
+    loginBody.password,
+  );
+  const token = await cred.user.getIdToken();
+  return {
+    token,
+    user: {
+      id: cred.user.uid,
+      email: cred.user.email ?? "",
+      name: cred.user.displayName ?? cred.user.email ?? "",
+      tier: "free",
+      scanCount: 0,
+      createdAt: cred.user.metadata.creationTime ?? new Date().toISOString(),
+    },
+  };
 };
 
 export const getLoginMutationOptions = <
@@ -263,7 +295,7 @@ export const getLoginMutationOptions = <
   > = (props) => {
     const { data } = props ?? {};
 
-    return login(data, requestOptions);
+    return login(data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -305,13 +337,10 @@ export const getLogoutUrl = () => {
   return `/api/auth/logout`;
 };
 
-export const logout = async (
-  options?: RequestInit,
-): Promise<SuccessResponse> => {
-  return customFetch<SuccessResponse>(getLogoutUrl(), {
-    ...options,
-    method: "POST",
-  });
+export const logout = async (): Promise<SuccessResponse> => {
+  const auth = getFirebaseAuth();
+  await firebaseSignOut(auth);
+  return { success: true, message: "Logged out successfully" };
 };
 
 export const getLogoutMutationOptions = <
@@ -344,7 +373,7 @@ export const getLogoutMutationOptions = <
     Awaited<ReturnType<typeof logout>>,
     void
   > = () => {
-    return logout(requestOptions);
+    return logout();
   };
 
   return { mutationFn, ...mutationOptions };
@@ -386,11 +415,20 @@ export const getGetMeUrl = () => {
   return `/api/auth/me`;
 };
 
-export const getMe = async (options?: RequestInit): Promise<User> => {
-  return customFetch<User>(getGetMeUrl(), {
-    ...options,
-    method: "GET",
-  });
+export const getMe = async (): Promise<User> => {
+  const auth = getFirebaseAuth();
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+  return {
+    id: user.uid,
+    email: user.email ?? "",
+    name: user.displayName ?? user.email ?? "",
+    tier: "free",
+    scanCount: 0,
+    createdAt: user.metadata.creationTime ?? new Date().toISOString(),
+  };
 };
 
 export const getGetMeQueryKey = () => {
@@ -410,7 +448,7 @@ export const getGetMeQueryOptions = <
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getMe>>> = ({
     signal,
-  }) => getMe({ signal, ...requestOptions });
+  }) => getMe();
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getMe>>,

@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react";
-import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { getFirebaseAuth } from "@workspace/api-client-react";
 
 export interface AuthUser {
   id: string;
@@ -14,47 +14,53 @@ export interface AuthUser {
 export interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
-  login: (token: string) => void;
-  logout: () => void;
-  token: string | null;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => {
-    try { return localStorage.getItem("truthlens_token"); } catch { return null; }
-  });
-
-  const queryClient = useQueryClient();
-
-  const { data: user, isLoading, isError } = useGetMe({
-    query: {
-      enabled: !!token,
-      queryKey: getGetMeQueryKey(),
-      retry: false,
-    },
-  });
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (isError) {
-      doLogout();
+    let auth;
+    try {
+      auth = getFirebaseAuth();
+    } catch {
+      setIsLoading(false);
+      return;
     }
-  }, [isError]);
 
-  const doLogout = () => {
-    try { localStorage.removeItem("truthlens_token"); } catch {}
-    setToken(null);
-    queryClient.setQueryData(getGetMeQueryKey(), null);
-  };
+    const unsub = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser({
+          id: firebaseUser.uid,
+          email: firebaseUser.email ?? "",
+          name: firebaseUser.displayName ?? firebaseUser.email ?? "",
+          tier: "free",
+          scanCount: 0,
+          createdAt: firebaseUser.metadata.creationTime ?? new Date().toISOString(),
+        });
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
 
-  const login = (newToken: string) => {
-    try { localStorage.setItem("truthlens_token", newToken); } catch {}
-    setToken(newToken);
+    return unsub;
+  }, []);
+
+  const logout = async () => {
+    try {
+      const auth = getFirebaseAuth();
+      await signOut(auth);
+    } catch {}
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user: (user as AuthUser) ?? null, isLoading, login, logout: doLogout, token }}>
+    <AuthContext.Provider value={{ user, isLoading, logout }}>
       {children}
     </AuthContext.Provider>
   );
