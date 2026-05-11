@@ -62,7 +62,7 @@ export default function LoginPage() {
                 required
                 placeholder="you@example.com"
                 className="w-full px-4 py-3 rounded-lg text-sm text-white placeholder-[#A0A0B8] outline-none transition-all focus:ring-1"
-                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", focusRingColor: "#00D4FF" }}
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
                 onFocus={(e) => (e.target.style.borderColor = "rgba(0,212,255,0.5)")}
                 onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
               />

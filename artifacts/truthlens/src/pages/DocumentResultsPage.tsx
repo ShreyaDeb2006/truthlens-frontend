@@ -1,6 +1,6 @@
 import { useParams, Link } from "wouter";
 import { motion } from "framer-motion";
-import { useGetDocumentScan } from "@workspace/api-client-react";
+import { useGetDocumentScan, getGetDocumentScanQueryKey } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Download, ArrowLeft, AlertTriangle } from "lucide-react";
 
@@ -46,6 +46,7 @@ export default function DocumentResultsPage() {
   const { id } = useParams<{ id: string }>();
   const { data: scan, isLoading } = useGetDocumentScan(id!, {
     query: {
+      queryKey: getGetDocumentScanQueryKey(id!),
       enabled: !!id,
       refetchInterval: (query) => {
         const data = query.state.data as any;
@@ -140,8 +141,8 @@ export default function DocumentResultsPage() {
           <div className="space-y-5">
             {/* Gauge */}
             <div className="glass-panel rounded-2xl p-6 flex flex-col items-center gap-4">
-              <AnimatedGauge value={confidence} verdict={scan.verdict} />
-              <VerdictChip verdict={scan.verdict} />
+              <AnimatedGauge value={confidence} verdict={scan.verdict ?? "UNCERTAIN"} />
+              <VerdictChip verdict={scan.verdict ?? "UNCERTAIN"} />
               {scan.verdictLabel && <p className="text-sm text-[#A0A0B8] text-center">{scan.verdictLabel}</p>}
             </div>
 

@@ -1,6 +1,6 @@
 import { useParams, Link } from "wouter";
 import { motion } from "framer-motion";
-import { useGetScan } from "@workspace/api-client-react";
+import { useGetScan, getGetScanQueryKey } from "@workspace/api-client-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { AlertTriangle, RefreshCw, Download, Copy, ArrowLeft } from "lucide-react";
@@ -65,6 +65,7 @@ export default function ResultsPage() {
   const { id } = useParams<{ id: string }>();
   const { data: scan, isLoading } = useGetScan(id!, {
     query: {
+      queryKey: getGetScanQueryKey(id!),
       enabled: !!id,
       refetchInterval: (query) => {
         const data = query.state.data as any;
@@ -134,10 +135,10 @@ export default function ResultsPage() {
         <div className="glass-panel rounded-2xl p-8">
           <div className="flex flex-col md:flex-row items-center gap-8">
             <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-              <AnimatedGauge value={confidence} verdict={scan.verdict} />
+              <AnimatedGauge value={confidence} verdict={scan.verdict ?? "UNCERTAIN"} />
             </motion.div>
             <div className="flex-1 space-y-4">
-              <VerdictChip verdict={scan.verdict} />
+              <VerdictChip verdict={scan.verdict ?? "UNCERTAIN"} />
               <div className="text-[#A0A0B8] text-sm">{scan.verdictLabel}</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>

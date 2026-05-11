@@ -130,7 +130,7 @@ export default function ScanPage() {
         navigate(`/results/${result.id}`);
       } else if (tab === "news") {
         const result = await new Promise<any>((resolve, reject) => {
-          scanNews.mutate({ data: { url, content: newsText || undefined } }, { onSuccess: resolve, onError: reject });
+          scanNews.mutate({ data: { url, text: newsText || undefined } }, { onSuccess: resolve, onError: reject });
         });
         navigate(`/results/${result.id}`);
       } else if (file) {

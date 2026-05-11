@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { Shield, Zap, FileText, Image, Video, Music, Globe, FileSearch, Check, ChevronRight } from "lucide-react";
 
 function ParticleCanvas() {
@@ -83,12 +83,12 @@ function AnimatedGauge({ value }: { value: number }) {
   );
 }
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
 };
 
-const stagger = { visible: { transition: { staggerChildren: 0.1 } } };
+const stagger: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
 
 const DETECTION_TYPES = [
   { icon: FileText, label: "Text Analysis", color: "#00D4FF" },

@@ -109,7 +109,7 @@ export default function DashboardPage() {
                 <div key={i} className="h-12 rounded animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
               ))}
             </div>
-          ) : !activity?.recentScans?.length ? (
+          ) : !activity?.activity?.length ? (
             <div className="p-12 text-center text-[#A0A0B8]">
               <Scan className="w-10 h-10 mx-auto mb-3 opacity-30" />
               <p className="font-medium mb-1">No scans yet</p>
@@ -120,7 +120,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="divide-y divide-white/5">
-              {activity.recentScans.map((scan: any, i: number) => (
+              {activity.activity.map((scan: any, i: number) => (
                 <motion.div key={scan.id} custom={i} variants={fadeUp} initial="hidden" animate="visible" className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors">
                   <TypeIcon type={scan.contentType} />
                   <div className="flex-1 min-w-0">

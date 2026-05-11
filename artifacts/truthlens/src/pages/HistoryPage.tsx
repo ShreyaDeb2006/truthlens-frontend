@@ -42,7 +42,7 @@ export default function HistoryPage() {
   const deleteDoc = useDeleteDocumentScan();
 
   const scans = scansData?.scans || [];
-  const docs = docsData?.documentScans || [];
+  const docs = docsData?.documents || [];
   const totalPages = tab === "scans" ? (scansData?.totalPages || 1) : (docsData?.totalPages || 1);
 
   const filteredScans = scans.filter((s: any) =>
