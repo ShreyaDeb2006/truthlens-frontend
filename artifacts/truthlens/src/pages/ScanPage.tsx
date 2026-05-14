@@ -134,12 +134,10 @@ export default function ScanPage() {
         });
         navigate(`/results/${result.id}`);
       } else if (file) {
-        const fd = new FormData();
-        fd.append("file", file);
-        let result: any;
-        if (tab === "image") result = await new Promise<any>((resolve, reject) => { scanImage.mutate({ data: fd as any }, { onSuccess: resolve, onError: reject }); });
-        else if (tab === "audio") result = await new Promise<any>((resolve, reject) => { scanAudio.mutate({ data: fd as any }, { onSuccess: resolve, onError: reject }); });
-        else if (tab === "video") result = await new Promise<any>((resolve, reject) => { scanVideo.mutate({ data: fd as any }, { onSuccess: resolve, onError: reject }); });
+       let result: any;
+        if (tab === "image") result = await new Promise<any>((resolve, reject) => { scanImage.mutate({ data: { file } }, { onSuccess: resolve, onError: reject }); });
+        else if (tab === "audio") result = await new Promise<any>((resolve, reject) => { scanAudio.mutate({ data: { file } }, { onSuccess: resolve, onError: reject }); });
+        else if (tab === "video") result = await new Promise<any>((resolve, reject) => { scanVideo.mutate({ data: { file } }, { onSuccess: resolve, onError: reject }); });
         navigate(`/results/${result.id}`);
       }
     } catch {
